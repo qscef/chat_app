@@ -4,12 +4,7 @@
       <div class="authorization-container" v-if="!userAuthorization">
         <v-card class="authorization-container__block" max-width="400">
           <v-card-text>Залогинься чтобы пользоваться</v-card-text>
-          <v-text-field
-            label="login"
-            placeholder="quest"
-            filled
-            v-model="user"
-          ></v-text-field>
+          <v-text-field label="login" placeholder="quest" filled v-model="user"></v-text-field>
           <div class="authorization-container__button">
             <v-btn elevation="3" color="primary" @click="authorization">
               Войти
@@ -45,12 +40,12 @@
               <li @click="connectToRoom(room.name)" v-for="room in rooms" :key="room.name">комната {{room.name}}</li>
             </div>
           </ul>
-          <v-btn block elevation="3" color="primary" class="left-sidebar-menu__new-rooms" @click="createNewRoom">
+          <v-btn block elevation="3" color="primary" class="left-sidebar-menu__new-rooms" @click="showModalCreateNewRoom = true">
             Создать новую комнату
           </v-btn>
         </div>
         <div class="chat-container" @click="closeMenu">
-          <div class="chat-container__null" v-if="!messages">
+          <div class="chat-container__null" v-if="!opennedRoom">
             <span>Выберите существующую комнату или создайте свою, чтобы начать общение.</span>
           </div>
           <div class="chat-container__content" v-else>
@@ -58,8 +53,11 @@
               <span>Вы в комнате:</span>
               <span class="chat-container__room-name">{{opennedRoom}} </span>
             </div>
-            <div class="chat-container__messages">
-              <div class="chat-container__message" v-for="message in messages" :key="message.created">
+            <div class="chat-container__messages" >
+              <div class="chat-container__null" v-if="!messages">
+                <span>Начните общение просто отправив сообщение</span>
+              </div>
+              <div class="chat-container__message" v-else v-for="message in messages" :key="message.created">
                 <div class="message__icon">
                   <span class="message__icon-text">{{ message.sender.username[0] }}</span>
                 </div>
@@ -77,7 +75,7 @@
                  <v-text-field label="Сообщение" v-model="newMessage"></v-text-field>
               </div>
               <div class="chat-container__buttonSend">
-                <v-btn elevation="3" color="primary">
+                <v-btn elevation="3" color="primary" @click="sendMessage">
                   Отправить
                 </v-btn>
               </div>
@@ -85,6 +83,18 @@
           </div>
         </div>
       </div>
+      <v-dialog v-model="showModalCreateNewRoom" max-width="500px">
+        <v-card>
+          <v-card-title>
+            <span>Введите название комнаты</span>
+           <v-text-field label="Название комнаты" v-model="newRoom"></v-text-field>
+          </v-card-title>
+          <v-card-actions>
+            <v-btn color="primary" @click="createNewRoom">Создать</v-btn>
+            <v-btn color="primary" text @click="showModalCreateNewRoom = false">Закрыть</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <div class="alert" v-if="alertMessage">
         <v-alert border="top" color="red lighten-2" dark>{{ alertMessage }}</v-alert>
       </div>
@@ -109,6 +119,8 @@ export default {
       messages: null,
       newMessage: null,
       opennedRoom: null,
+      showModalCreateNewRoom: false,
+      newRoom: null,
     }
   },
   created() {
@@ -123,6 +135,9 @@ export default {
           console.log(error);
           this.showAlert(`Ошибка соединения с сервером ${error}`, 1500);
         });
+  },
+  destroyed() {
+    this.connection.close(1000);
   },
   methods: {
     closeMenu() {
@@ -147,7 +162,11 @@ export default {
       }
     },
     createNewRoom() {
-      console.log('create new room');
+      this.showModalCreateNewRoom = false;
+      this.isOpennedMenu = false;
+      this.opennedRoom = this.newRoom;
+      this.messages = null;
+      this.newRoom = null;
     },
     takeListRooms() {
       axios.post('https://nane.tada.team/api/rooms')
@@ -156,6 +175,38 @@ export default {
           console.log(error);
           this.showAlert(`Ошибка соединения с сервером ${error}`, 1500);
         });
+      this.connection = new WebSocket(`wss://nane.tada.team/ws?username=${this.user}`);
+      this.connection.onopen = (event) => {
+        console.log(event);
+        console.log('success');
+      }
+      this.connection.onmessage = (event) => {
+        const newData = JSON.parse(event.data);
+        console.log(newData);
+        if (newData.room === this.opennedRoom) {
+          console.log('add new');
+          if (this.messages === null) {
+            this.messages = [];
+          }
+          this.messages.push(newData);
+          this.$nextTick(function () {
+            const containerMessages = document.querySelector(".chat-container__messages");
+            containerMessages.scrollTop = containerMessages.scrollHeight;
+          })
+        } 
+      }
+
+      this.connection.onclose = (event) => {
+        if (event.wasClean) {
+          this.showAlert(`Соединение закрыто чисто, код=${event.code} причина=${event.reason}`, 1500);
+        } else {
+          this.showAlert(`Соединение разорвано`, 1500);
+        }
+      };
+
+      this.connection.onerror = (error) => {
+        this.showAlert(`Соединение разорвано ${error.message}`, 1500);
+      };
     },
     connectToRoom(roomName) {
       this.isOpennedMenu = false;
@@ -165,8 +216,8 @@ export default {
           this.messages = response.data.result
           // скролим чат к самому новому сообщению но после обновления dom
           this.$nextTick(function () {
-            let block = document.querySelector(".chat-container__messages");
-            block.scrollTop = block.scrollHeight;
+            const containerMessages = document.querySelector(".chat-container__messages");
+            containerMessages.scrollTop = containerMessages.scrollHeight;
           })
         })
         .catch(error => {
@@ -179,20 +230,14 @@ export default {
       return `${temp.getHours() < 10 ? '0' + temp.getHours(): temp.getHours()}:${temp.getMinutes() < 10 ? '0' + temp.getMinutes(): temp.getMinutes()} ${temp.getDate() < 10 ? '0' + temp.getDate() : temp.getDate() }.${temp.getMonth() < 10 ? '0' + (temp.getMonth() + 1) : temp.getMonth() + 1}.${temp.getFullYear()} `;
     },
     sendMessage() {
-      console.log('start connect');
-      this.connection = new WebSocket(`wss://nane.tada.team/ws?username=${1}`);
-      this.connection.onopen = function (event) {
-        console.log(event);
-        console.log('success');
-      }
-      this.connection.onmessage = function(event) {
-        console.log(event);
-      }
+      console.log('send message');
+      this.connection.send(`{"room" : "${this.opennedRoom}", "text": "${this.newMessage}"}`)
+      this.newMessage = null;
     },
     showAlert(message, time) {
       this.alertMessage = message;
       setTimeout(() => { this.alertMessage = null } , time);
-    }
+    },
   },
 }
 </script>
@@ -387,6 +432,7 @@ export default {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          margin-left: 5px;
         }
       }
       
