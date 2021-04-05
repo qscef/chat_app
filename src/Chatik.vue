@@ -14,9 +14,12 @@
       </div>
       <div class="main-container" v-else>
         <div class="left-sidebar-menu">
-          <v-btn icon color="primary">
-            <v-icon @click="isOpennedMenu=true">mdi-menu</v-icon>
-          </v-btn>
+          <div class="button-menu">
+            <v-btn icon color="primary">
+              <v-icon @click="isOpennedMenu=true">mdi-menu</v-icon>
+            </v-btn>
+            <div class="notification-new-message" v-if="Object.keys(roomsWithNewMessage).length > 0"></div>
+          </div>
         </div>
         <div class="left-sidebar-menu__openned" :class="isOpennedMenu ? 'open' : 'hidden'">
           <div class="left-sidebar-menu__close">
@@ -37,7 +40,10 @@
           <span class="left-sidebar-menu__rooms-title">Комнаты:</span>
           <ul>
             <div class="left-sidebar-menu__rooms-container">
-              <li @click="connectToRoom(room.name)" v-for="room in rooms" :key="room.name">комната {{room.name}}</li>
+              <li @click="connectToRoom(room.name)" v-for="room in rooms" :key="room.name">
+                комната {{room.name}}
+                <span class="notification-in-room" v-if="roomsWithNewMessage[room.name]">{{ roomsWithNewMessage[room.name] }}</span>
+              </li>
             </div>
           </ul>
           <v-btn block elevation="3" color="primary" class="left-sidebar-menu__new-rooms" @click="showModalCreateNewRoom = true">
@@ -121,6 +127,7 @@ export default {
       opennedRoom: null,
       showModalCreateNewRoom: false,
       newRoom: null,
+      roomsWithNewMessage: {},
     }
   },
   created() {
@@ -193,7 +200,13 @@ export default {
             const containerMessages = document.querySelector(".chat-container__messages");
             containerMessages.scrollTop = containerMessages.scrollHeight;
           })
-        } 
+        } else {
+          if (this.roomsWithNewMessage[newData.room]) {
+            this.$set(this.roomsWithNewMessage, newData.room, this.roomsWithNewMessage[newData.room] + 1)
+          } else {
+            this.$set(this.roomsWithNewMessage, newData.room, 1)
+          }
+        }
       }
 
       this.connection.onclose = (event) => {
@@ -218,6 +231,7 @@ export default {
           this.$nextTick(function () {
             const containerMessages = document.querySelector(".chat-container__messages");
             containerMessages.scrollTop = containerMessages.scrollHeight;
+            this.$delete(this.roomsWithNewMessage, roomName);
           })
         })
         .catch(error => {
@@ -290,6 +304,33 @@ export default {
     width: 70px;
     background: $background-color;
     align-items: center;
+
+    .button-menu {
+      position: relative;
+
+      .notification-new-message {
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        top: 7px;
+        right: 7px;
+        background: red;
+        border-radius: 50%;
+        animation: notification-new-message infinite 2s linear;
+      }
+
+      @keyframes notification-new-message {
+        0% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+    }
   }
 
   .left-sidebar-menu__openned {
@@ -376,6 +417,7 @@ export default {
       }
 
       li {
+        position: relative;
         min-height: 30px;
         margin: 10px 0;
         padding: 0 20px;
@@ -389,6 +431,34 @@ export default {
         &:hover {
           background: $background-accent-color;
           color: white;
+        }
+
+        .notification-in-room {
+          position: absolute;
+          right: 3px;
+          top: 2px;
+          font-size: 14px;
+          font-weight: bold;
+          color: white;
+          width: 25px;
+          height: 25px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: notification-in-room infinite 1s linear;
+        }
+
+        @keyframes notification-in-room {
+          0% {
+            background: rgb(131, 90, 90);
+          }
+          50% {
+            background: red;
+          }
+          100% {
+            background: rgb(131, 90, 90);
+          }
         }
       }
     }
