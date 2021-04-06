@@ -1,24 +1,28 @@
 # chat_app
 
-## Project setup
+## Скачиваем node js под свою систему, следуя инструкциям
+```
+https://nodejs.org/en/download/
+```
+
+## Далее устанавливаем git
+```
+https://git-scm.com/
+```
+
+## Теперь открываем папку в которую хотите развернуть проект, открываем git и вводим
+```
+git clone https://github.com/qscef/chat_app.git
+```
+
+## Отлично, теперь остается лишь открыть проект в вашей IDE, который вы пользуетесь. В ней открываем папку в которую склонировали репозиторий. Открываем терминал (для VS это 'ctrl' + 'ё') и пишем
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+## Ждем как установятся все зависимости и вводим слдующую комнаду
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## По адресу http://localhost:8080/ или тому, который напишет IDE будет развернутый проект.
