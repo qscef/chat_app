@@ -1,17 +1,17 @@
 <template>
   <div id="app">
     <v-app id="inspire">
-      <div class="authorization-container" v-if="!userAuthorization">
+      <v-form class="authorization-container" v-if="!userAuthorization" @submit.prevent="authorization">
         <v-card class="authorization-container__block" max-width="400">
           <v-card-text>Залогинься чтобы пользоваться</v-card-text>
-          <v-text-field label="login" placeholder="quest" filled v-model="user"></v-text-field>
+          <v-text-field label="login" placeholder="quest" filled v-model="user" autofocus></v-text-field>
           <div class="authorization-container__button">
-            <v-btn elevation="3" color="primary" @click="authorization">
+            <v-btn elevation="3" color="primary" type="submit">
               Войти
             </v-btn>
           </div>
         </v-card>
-      </div>
+      </v-form>
       <div class="main-container" v-else>
         <div class="left-sidebar-menu">
           <div class="button-menu">
@@ -76,30 +76,32 @@
                 </div>
               </div>
             </div>
-            <div class="chat-container__controls">
+            <v-form class="chat-container__controls" @submit.prevent="sendMessage">
               <div class="chat-container__textfield">
-                 <v-text-field label="Сообщение" v-model="newMessage"></v-text-field>
+                 <v-text-field label="Сообщение" autofocus v-model="newMessage"></v-text-field>
               </div>
               <div class="chat-container__buttonSend">
-                <v-btn elevation="3" color="primary" @click="sendMessage">
+                <v-btn elevation="3" color="primary" type="submit">
                   Отправить
                 </v-btn>
               </div>
-            </div>
+            </v-form>
           </div>
         </div>
       </div>
       <v-dialog v-model="showModalCreateNewRoom" max-width="500px">
-        <v-card>
-          <v-card-title>
-            <span>Введите название комнаты</span>
-           <v-text-field label="Название комнаты" v-model="newRoom"></v-text-field>
-          </v-card-title>
-          <v-card-actions>
-            <v-btn color="primary" @click="createNewRoom">Создать</v-btn>
-            <v-btn color="primary" text @click="showModalCreateNewRoom = false">Закрыть</v-btn>
-          </v-card-actions>
-        </v-card>
+        <v-form @submit.prevent="createNewRoom">
+          <v-card class="modal-new-room">
+            <v-card-title>
+              <span>Введите название комнаты</span>
+            </v-card-title>
+            <v-text-field label="Название комнаты" v-model="newRoom" autofocus></v-text-field>
+            <v-card-actions>
+              <v-btn color="primary" type="submit">Создать</v-btn>
+              <v-btn color="primary" text @click="newRoom=null;showModalCreateNewRoom = false">Закрыть</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-form>
       </v-dialog>
       <div class="alert" v-if="alertMessage">
         <v-alert border="top" color="red lighten-2" dark>{{ alertMessage }}</v-alert>
@@ -169,6 +171,15 @@ export default {
       }
     },
     createNewRoom() {
+      if (this.settings.max_room_title_length && this.newRoom.length > this.settings.max_room_title_length) {
+        this.showAlert(`Логин не может быть больше ${this.settings.max_room_title_length} символов`, 1500);
+      }
+      this.rooms.forEach(room => {
+        if (this.newRoom === room.name) {
+          this.connectToRoom(this.newRoom)
+          return
+        }
+      });
       this.showModalCreateNewRoom = false;
       this.isOpennedMenu = false;
       this.opennedRoom = this.newRoom;
@@ -244,6 +255,10 @@ export default {
       return `${temp.getHours() < 10 ? '0' + temp.getHours(): temp.getHours()}:${temp.getMinutes() < 10 ? '0' + temp.getMinutes(): temp.getMinutes()} ${temp.getDate() < 10 ? '0' + temp.getDate() : temp.getDate() }.${temp.getMonth() < 10 ? '0' + (temp.getMonth() + 1) : temp.getMonth() + 1}.${temp.getFullYear()} `;
     },
     sendMessage() {
+      if (this.newMessage === null) {
+        this.showAlert('Нельзя отправить пустое сообщение', 1500);
+        return;
+      }
       console.log('send message');
       this.connection.send(`{"room" : "${this.opennedRoom}", "text": "${this.newMessage}"}`)
       this.newMessage = null;
@@ -603,5 +618,9 @@ export default {
     position: absolute;
     right: 20px;
     bottom: 20px;
+  }
+
+  .modal-new-room {
+    padding: 0 20px;
   }
 </style>
