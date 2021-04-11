@@ -32,6 +32,8 @@ export default {
         this.$store.dispatch('SET_ALERTMESSAGE', `Логин не может быть пустым`);
       } else if (this.settings.max_username_length && this.user.length > this.settings.max_username_length) {
         this.$store.dispatch('SET_ALERTMESSAGE', `Логин не может быть больше ${this.settings.max_username_length} символов`);
+      } else if (this.user.match(/[#$%^&\\\\';/{}|"<>]/gi)) {
+        this.$store.dispatch('SET_ALERTMESSAGE', `Логин не может содержать спецсимволы`);
       } else {
         this.$store.dispatch('SET_USER', this.user);
         localStorage.setItem('chatikUser', this.user)

@@ -5,7 +5,7 @@
       <div class="chat-container__null" v-if="!opennedRoom">
         <span>Выберите существующую комнату или создайте свою, чтобы начать общение.</span>
       </div>
-      <Dialog :room-name="opennedRoom" :messages="messages" v-else/>
+      <Dialog :room-name="opennedRoom" :messages="messages" :connection="connection" v-else/>
     </div>
     <v-dialog v-model="showModalCreateNewRoom" max-width="500px">
       <v-form @submit.prevent="createNewRoom">
@@ -111,14 +111,14 @@ export default {
       }
       this.connection.onclose = (event) => {
         if (event.wasClean) {
-          this.$store.dispatch('SET_ALERTMESSAGE', `Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+          console.log(`Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
         } else {
-          this.$store.dispatch('SET_ALERTMESSAGE', `Соединение разорвано`);
+          console.log('Соединение разорвано');
         }
       };
 
       this.connection.onerror = (error) => {
-        this.$store.dispatch('SET_ALERTMESSAGE', `Соединение разорвано ${error.message}`);
+        console.log(`Соединение разорвано ${error.message}`);
       };
     },
     connectToRoom() {
@@ -141,7 +141,6 @@ export default {
         })
         .catch(error => {
           console.log(error);
-          this.$store.dispatch('SET_ALERTMESSAGE', `Ошибка соединения с сервером ${error}`);
         });
     },
     createNewRoom() {
@@ -154,6 +153,15 @@ export default {
       this.showModalCreateNewRoom = false;
       this.$store.dispatch('SET_ISOPENNEDMENU', false)
       this.messages = null;
+      let isNewRoom = true;
+      this.rooms.forEach(room => {
+        if (room.name === this.opennedRoom) {
+          isNewRoom = false
+        }
+      });
+      if (isNewRoom) {
+        this.rooms.push({"name": this.newRoom});
+      }
       this.$router.push({ name: 'chat', params: { opennedRoom: this.newRoom } });
       this.newRoom = null;
     },

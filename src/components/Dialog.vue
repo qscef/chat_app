@@ -39,7 +39,7 @@ export default {
   props:{
     roomName: { type: String, default: '' },
     messages: { type: Array, default: () => [] },
-    connection: {}
+    connection: { type: WebSocket, default: null },
   },
   data() {
     return {
@@ -49,7 +49,13 @@ export default {
   methods: {
     messageDate(date) {
       const temp = new Date (date);
-      return `${temp.getHours() < 10 ? '0' + temp.getHours(): temp.getHours()}:${temp.getMinutes() < 10 ? '0' + temp.getMinutes(): temp.getMinutes()} ${temp.getDate() < 10 ? '0' + temp.getDate() : temp.getDate() }.${temp.getMonth() < 10 ? '0' + (temp.getMonth() + 1) : temp.getMonth() + 1}.${temp.getFullYear()} `;
+      let result = ''
+      result += (temp.getHours() < 10 ? '0' + temp.getHours() : temp.getHours()) + ':'
+      result += (temp.getMinutes() < 10 ? '0' + temp.getMinutes() : temp.getMinutes()) + ' '
+      result += (temp.getDate() < 10 ? '0' + temp.getDate() : temp.getDate()) + '.'
+      result += (temp.getMonth() < 10 ? '0' + (temp.getMonth() + 1) : temp.getMonth()) + '.'
+      result += temp.getFullYear()
+      return result
     },
     sendMessage() {
       if (this.newMessage === null) {
@@ -57,7 +63,7 @@ export default {
         return;
       }
       console.log('send message');
-      this.connection.send(`{"room" : "${this.opennedRoom}", "text": "${this.newMessage}"}`)
+      this.connection.send(`{"room" : "${this.roomName}", "text": "${this.newMessage}"}`)
       this.newMessage = null;
     },
   }

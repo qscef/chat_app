@@ -1,5 +1,5 @@
 <template>
   <div>
-    404
+    Такой страницы не найдено
   </div>
 </template>
