@@ -12,18 +12,25 @@
 <script>
 export default {
   name: 'Chatik',
-  data() {
-    return {
-      alertMessage: null,
-    }
-  },
   created () {
     this.$store.dispatch('GET_SETTINGS');
+    if (localStorage.getItem('chatikUser') !== null) {
+      this.$store.dispatch('SET_USER', localStorage.getItem('chatikUser'));
+    }
+  },
+  computed: {
+    alertMessage () {
+      return this.$store.state.alertMessage;
+    },
+  },
+  watch: {
+    alertMessage() {
+      this.showAlert()
+    }
   },
   methods: {
-    showAlert({ message, time }) {
-      this.alertMessage = message;
-      setTimeout(() => { this.alertMessage = null } , time);
+    showAlert() {
+      setTimeout(() => { this.$store.dispatch('SET_ALERTMESSAGE', null) } , 1500);
     },
   },
 }
@@ -43,6 +50,7 @@ export default {
 
   .alert {
     position: absolute;
+    z-index: 2;
     right: 20px;
     bottom: 20px;
   }

@@ -2,6 +2,7 @@ import NullPage from './pages/NullPage.vue'
 import Login from './pages/Login.vue'
 import Chats from './pages/Chats.vue'
 
+
 const routes = [
   {
     name: 'nullPage',
@@ -11,13 +12,17 @@ const routes = [
   {
     name: 'chats',
     path: '/chats',
+    component: Chats,
+  },
+  {
+    name: 'chat',
+    path: '/chat/:opennedRoom',
     props: true,
     component: Chats,
   },
   {
     name: 'login',
     path: "/login",
-    props: true,
     component: Login,
   },
   {

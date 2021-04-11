@@ -8,13 +8,12 @@ export const store = new Vuex.Store({
   state: {
     settings: [],
     isOpennedMenu: false,
+    user: null,
+    countNewMessage: 0,
+    alertMessage: null,
   },
    
-  getters: {
-    ISOPENNEDMENU : () => {
-      this.$store.getters.TODOS;
-    }
-  },
+  getters: {},
    
   mutations: {
     SET_SETTINGS: (state, settings) => {
@@ -22,6 +21,15 @@ export const store = new Vuex.Store({
     },
     SET_ISOPENNEDMENU: (state, payload) => {
       state.isOpennedMenu = payload;
+    },
+    SET_USER: (state, payload) => {
+      state.user = payload;
+    },
+    SET_COUNTNEWMESSAGE: (state, payload) => {
+      state.countNewMessage = payload;
+    },
+    SET_ALERTMESSAGE: (state, payload) => {
+      state.alertMessage = payload;
     },
   },
    
@@ -33,12 +41,19 @@ export const store = new Vuex.Store({
         })
         .catch(error => {
           console.log(error);
-          // add to vuex state errorMessage
-          // this.showAlert(`Ошибка соединения с сервером ${error}`, 1500);
         });
     },
     SET_ISOPENNEDMENU : (context, payload) => {
       context.commit('SET_ISOPENNEDMENU', payload)
     },
+    SET_USER : (context, payload) => {
+      context.commit('SET_USER', payload)
+    },
+    SET_COUNTNEWMESSAGE: (context, payload) => {
+      context.commit('SET_COUNTNEWMESSAGE', payload)
+    },
+    SET_ALERTMESSAGE: (context, payload) => {
+      context.commit('SET_ALERTMESSAGE', payload)
+    }, 
   }
 })

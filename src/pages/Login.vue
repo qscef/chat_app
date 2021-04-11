@@ -29,12 +29,13 @@ export default {
     authorization() {
       console.log('setting', this.settings)
       if (!this.user) {
-        this.$emit('showAlert', { message: 'Логин не может быть пустым', time: 1500 });
+        this.$store.dispatch('SET_ALERTMESSAGE', `Логин не может быть пустым`);
       } else if (this.settings.max_username_length && this.user.length > this.settings.max_username_length) {
-        this.$emit('showAlert', { message: `Логин не может быть больше ${this.settings.max_username_length} символов`, time: 1500 });
+        this.$store.dispatch('SET_ALERTMESSAGE', `Логин не может быть больше ${this.settings.max_username_length} символов`);
       } else {
-        localStorage.setItem('chatikUser', this.user);
-        this.$router.push({ name: 'chats', params: { user: this.user, settings: this.settings } })
+        this.$store.dispatch('SET_USER', this.user);
+        localStorage.setItem('chatikUser', this.user)
+        this.$router.push({ name: 'chats' })
       }
     },
   },
